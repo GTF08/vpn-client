@@ -1,0 +1,9 @@
+[workspace]
+resolver = "3"
+members = [
+    "tunnel_lib",
+    "client"
+]
+
+[profile.release]
+opt-level = 3

@@ -1,0 +1,34 @@
+[package]
+name = "tunnel_lib"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "tunnel_lib"
+crate-type = ["cdylib"]
+
+
+[dependencies]
+jni = "0.21.1"
+tun = {version = "0.8.4", features = ["async"]}
+aes-gcm-siv = "=0.11.1"
+sha2 = "0.10"
+x25519-dalek = "2.0.1"
+ed25519-dalek = "2.2.0"
+tokio = { version = "1", features = ["full"] }
+packet = "0.1.4"
+hex = "0.4"
+bincode = { version = "2.0.1", features = ["serde"] }
+rand = "0.8"
+
+[target.aarch64-linux-android]
+linker = "{ANDROID_NDK_HOME}\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\aarch64-linux-android21-clang.cmd"
+
+[target.armv7-linux-androideabi]
+linker = "{ANDROID_NDK_HOME}\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\armv7a-linux-androideabi21-clang.cmd"
+
+[target.i686-linux-android]
+linker = "{ANDROID_NDK_HOME}\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\i686-linux-android21-clang.cmd"
+
+[target.x86_64-linux-android]
+linker = "{ANDROID_NDK_HOME}\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\x86_64-linux-android21-clang.cmd"
