@@ -49,7 +49,7 @@ impl RouteManager for DesktopRouteManager {
         {
             // Linux/macOS route command
             let output = Command::new("route")
-                .args(&["add", "-net", "0.0.0.0", "netmask", "0.0.0.0", &self.gateway])
+                .args(&["add", "default", "0.0.0.0/0", &self.gateway])
                 .output()?;
             
             if !output.status.success() {
@@ -84,7 +84,7 @@ impl RouteManager for DesktopRouteManager {
         #[cfg(any(target_os = "linux", target_os = "macos"))]
         {
             let output = Command::new("route")
-                .args(&["delete", "-net", "0.0.0.0", "netmask", "0.0.0.0", "gw", &self.gateway])
+                .args(&["delete", "default", "0.0.0.0/0", &self.gateway])
                 .output()?;
             
             if !output.status.success() {
