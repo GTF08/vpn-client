@@ -77,7 +77,7 @@ pub async fn create_tunnel(tun_ip: &str, tun_netmask: &str, tun_gateway: &str)
         .up();
 
     config.platform_config(|config| {
-            config.packet_information(false);
+            config.packet_information(true);
     });
 
     let dev = tun::create_as_async(&config)?;

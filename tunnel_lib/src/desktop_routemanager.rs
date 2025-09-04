@@ -49,17 +49,24 @@ impl RouteManager for DesktopRouteManager {
         {
             // Linux/macOS route command
             let output = Command::new("route")
-                .args(&["add", "default", "0.0.0.0/0", &self.gateway])
+                .args(&["add", "193.84.3.171", "192.168.0.1" ])
                 .output()?;
-            
+                Command::new("route")
+                .args(&["delete", "default"])
+                .output()?;
+                Command::new("route")
+                .args(&["add", "default", "10.0.0.1" ])
+                .output()?;
             if !output.status.success() {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
                     format!("Failed to add route: {}", String::from_utf8_lossy(&output.stderr))
                 ));
             }
+
+
         }
-        println!("ADDED DEFAULT ROUTE VIA {}", self.gateway);
+        println!("ADDED DEFAFUCKULT ROUTE VIA {}", self.gateway);
         Ok(())
     }
     
@@ -84,7 +91,7 @@ impl RouteManager for DesktopRouteManager {
         #[cfg(any(target_os = "linux", target_os = "macos"))]
         {
             let output = Command::new("route")
-                .args(&["delete", "default", "0.0.0.0/0", &self.gateway])
+                .args(&["ping", "default", &self.gateway])
                 .output()?;
             
             if !output.status.success() {
