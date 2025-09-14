@@ -18,7 +18,10 @@ fn main() -> Result<(), String> {
 
     info!("Starting application");
     
+    #[cfg(target_os = "windows")]
     let icon_bytes = include_bytes!("..\\icon.ico");
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    let icon_bytes = include_bytes!("../icon.ico");
     let icon = match iced::window::icon::from_file_data(icon_bytes,None) {
         Ok(icon) => Some(icon),
         Err(e) => {
