@@ -7,7 +7,6 @@ fn main() {
     println!("cargo:rustc-link-search=native=target\\x86_64-pc-windows-gnu\\release");
     println!("cargo:rustc-link-lib=dylib=tunnel_lib");
 
-    if cfg!(target_os = "windows") {
-        embed_resource::compile("app-manifest.rc");
-    }
+    #[cfg(target_os = "windows")]
+    embed_resource::compile("app-manifest.rc");
 }
