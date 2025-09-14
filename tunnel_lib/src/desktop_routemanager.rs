@@ -17,14 +17,12 @@ pub trait RouteManager {
     #[cfg(any(target_os = "linux", target_os = "macos"))]
     fn get_default_gateway() -> Result<String, Box<dyn std::error::Error>> {
         #[cfg(target_os = "linux")]
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg("ip route show default | awk '{print $3}'")
+        let output = Command::new("ip")
+            .arg("route show default | awk '{print $3}'")
             .output()?;
         #[cfg(target_os = "macos")]
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg("ip r | grep default | grep -v link |awk '{print $3}'")
+        let output = Command::new("ip")
+            .arg("r | grep default | grep -v link |awk '{print $3}'")
             .output()?;
         if !output.status.success() {
             return Ok(String::from_utf8(output.stdout)?.trim().to_string());
@@ -175,9 +173,7 @@ impl RouteManager for DesktopRouteManager {
                     .output()?;
 
                 #[cfg(any(target_os = "linux", target_os = "macos"))]
-                let output = Command::new("sh")
-                    .arg("-c")
-                    .arg(line)
+                let output = Command::new(line)
                     .output()?;
                 if !output.status.success() {
                     eprintln!("Failed to cleanup routes with command: {line}")
