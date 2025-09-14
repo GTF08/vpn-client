@@ -14,13 +14,13 @@ pub trait RouteManager {
     fn add_route(&self, destination: &str, gateway: &str) -> Result<(), Box<dyn std::error::Error>>;
     fn add_default_route(&self) -> Result<(), Box<dyn std::error::Error>>;
     fn cleanup(&self) -> Result<(), Box<dyn std::error::Error>>;
-    //#[cfg(any(target_os = "linux", target_os = "macos"))]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
     fn get_default_gateway() -> Result<String, Box<dyn std::error::Error>> {
         #[cfg(target_os = "linux")]
         let output = Command::new("ip")
             .arg("route show default | awk '{print $3}'")
             .output()?;
-        //#[cfg(target_os = "macos")]
+        #[cfg(target_os = "macos")]
         let output = Command::new("ip")
             .arg("r | grep default | grep -v link |awk {print $3}")
             .output()?;
