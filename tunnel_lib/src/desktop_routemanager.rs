@@ -46,11 +46,12 @@ pub trait RouteManager {
             let awk = Command::new("awk")
                 .arg("{print $3}")
                 .stdin(grep2.stdout.unwrap())
-                .stdout(Stdio::inherit())
+                .stdout(Stdio::piped())
                 .spawn()?;
 
             let output = awk.wait_with_output()?;
             println!("VAGINA {}", String::from_utf8(output.stdout.clone())?);
+            println!("SUCCESS?? {}", output.status.success());
             if !output.status.success() {
                 println!("HUI {}", String::from_utf8(output.stdout.clone())?);
                 return Ok(String::from_utf8(output.stdout)?.trim().to_string());
