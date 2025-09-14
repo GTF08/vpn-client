@@ -38,6 +38,7 @@ pub async fn create_tunnel(tun_ip: &str, tun_netmask: &str, tun_gateway: &str)
         .address(tun_ip)
         .netmask(tun_netmask)
         .destination(tun_gateway)
+        .mtu(1400u16)
         .up();
 
     #[cfg(target_os = "linux")]
@@ -57,6 +58,7 @@ pub async fn create_tunnel(tun_fd: c_int)
 -> Result<AsyncDevice, Box<dyn std::error::Error + Send + Sync>> 
 {
     let mut config = tun::Configuration::default();
+    config.mtu(1400u16);
     config.raw_fd(tun_fd);
     let mut dev = tun::create_as_async(&config).unwrap();
     Ok(dev)
@@ -74,6 +76,7 @@ pub async fn create_tunnel(tun_ip: &str, tun_netmask: &str, tun_gateway: &str)
         .address(tun_ip)
         .netmask(tun_netmask)
         .destination(tun_gateway)
+        .mtu(1400u16)
         .up();
 
     config.platform_config(|config| {
@@ -99,6 +102,7 @@ pub async fn create_tunnel(tun_ip: &str, tun_netmask: &str, tun_gateway: &str)
         .address(tun_ip)
         .netmask(tun_netmask)
         .destination(tun_gateway)
+        .mtu(1400u16)
         .up();
 
     #[cfg(target_os = "linux")]

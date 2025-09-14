@@ -2,8 +2,10 @@
 resolver = "3"
 members = [
     "tunnel_lib",
-    "client"
+    "client",
+    "client-gui"
 ]
 
 [profile.release]
 opt-level = 3
+debug = false
