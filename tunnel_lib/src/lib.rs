@@ -298,7 +298,7 @@ pub extern "C" fn vpn_negotiate(vpn_client_ptr: *mut c_void) -> c_int {
 #[unsafe(no_mangle)]
 pub extern "C" fn vpn_create_tun(vpn_client_ptr: *mut c_void) -> c_int {
     if vpn_client_ptr.is_null() {
-        
+        eprintln!("Ptr is null");
         return -1;
     }
     let vpn_client = unsafe{ &mut *(vpn_client_ptr as *mut VPNClient)};
@@ -315,7 +315,7 @@ pub extern "C" fn vpn_create_tun(vpn_client_ptr: *mut c_void) -> c_int {
     let dev = match dev_create_result {
         Ok(dev) => dev,
         Err(e) => {
-            
+            eprintln!("Error {e}");
             return -1;
         },
     };
@@ -323,7 +323,7 @@ pub extern "C" fn vpn_create_tun(vpn_client_ptr: *mut c_void) -> c_int {
     let tun_index = match dev.tun_index() {
         Ok(id) => id,
         Err(e) => {
-            
+            eprintln!("Error {e}");
             return -1;
         },
     };
@@ -336,7 +336,7 @@ pub extern "C" fn vpn_create_tun(vpn_client_ptr: *mut c_void) -> c_int {
             vpn_client.tunnel_settings.as_ref().unwrap().gateway_string.clone()
         );
         if let Err(e) = guard.add_default_route() {
-            
+            eprintln!("Guard error {e}");
             return -1;
         }
         guard
