@@ -46,7 +46,7 @@ pub trait RouteManager {
             let awk = Command::new("awk")
                 .arg("{print $3}")
                 .stdin(grep2.stdout.unwrap())
-                .stdout(Stdio::piped())
+                .stdout(Stdio::inherit())
                 .spawn()?;
 
             let output = awk.wait_with_output()?;
