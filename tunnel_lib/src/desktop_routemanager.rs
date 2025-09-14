@@ -45,7 +45,7 @@ pub trait RouteManager {
         let default_gateway_result = Command::new("awk")
             .arg("{print $3}")
             .stdin(Stdio::from(grep_vlink_result.stdout.unwrap()))
-            .stdout(Stdio::piped())
+            .stdout(Stdio::inherit())
             .spawn()
             .unwrap();
 
