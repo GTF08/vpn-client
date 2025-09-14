@@ -14,7 +14,7 @@ pub trait RouteManager {
     fn add_route(&self, destination: &str, gateway: &str) -> Result<(), Box<dyn std::error::Error>>;
     fn add_default_route(&self) -> Result<(), Box<dyn std::error::Error>>;
     fn cleanup(&self) -> Result<(), Box<dyn std::error::Error>>;
-    //#[cfg(any(target_os = "linux", target_os = "macos"))]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
     fn get_default_gateway() -> Result<String, Box<dyn std::error::Error>> {
         use std::process::Stdio;
 
@@ -22,13 +22,11 @@ pub trait RouteManager {
         let output = Command::new("ip")
             .arg("route show default | awk '{print $3}'")
             .output()?;
-        //#[cfg(target_os = "macos")]
+        #[cfg(target_os = "macos")]
         let ip_r_output = Command::new("ip")
             .arg("r")
             .stdout(Stdio::piped())
             .spawn()?;
-
-        println!("{:?}", ip_r_output.stdout.as_ref().unwrap());
 
         let grep_default_result = Command::new("grep")
             .arg("default")
@@ -36,8 +34,6 @@ pub trait RouteManager {
             .stdout(Stdio::piped())
             .spawn()
             .unwrap();
-        
-        println!("{:?}", grep_default_result.stdout.as_ref().unwrap());
 
         let grep_vlink_result = Command::new("grep")
             .args(["-v", "link"])
@@ -46,16 +42,12 @@ pub trait RouteManager {
             .spawn()
             .unwrap();
 
-        println!("{:?}", grep_vlink_result.stdout.as_ref().unwrap());
-
         let default_gateway_result = Command::new("awk")
-            .arg("'{print $3}'")
+            .arg("{print $3}")
             .stdin(Stdio::from(grep_vlink_result.stdout.unwrap()))
             .stdout(Stdio::piped())
             .spawn()
             .unwrap();
-
-        println!("{:?}", default_gateway_result.stdout.as_ref().unwrap());
 
         let default_gateway = default_gateway_result.wait_with_output()?;
         if !default_gateway.status.success() {
