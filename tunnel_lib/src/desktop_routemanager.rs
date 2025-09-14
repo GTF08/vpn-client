@@ -14,55 +14,21 @@ pub trait RouteManager {
     fn add_route(&self, destination: &str, gateway: &str) -> Result<(), Box<dyn std::error::Error>>;
     fn add_default_route(&self) -> Result<(), Box<dyn std::error::Error>>;
     fn cleanup(&self) -> Result<(), Box<dyn std::error::Error>>;
-    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    //#[cfg(any(target_os = "linux", target_os = "macos"))]
     fn get_default_gateway() -> Result<String, Box<dyn std::error::Error>> {
-        use std::process::Stdio;
-
         #[cfg(target_os = "linux")]
         let output = Command::new("ip")
             .arg("route show default | awk '{print $3}'")
             .output()?;
-        
-        
-        
-        #[cfg(target_os = "macos")]
-        {
-            let ip_r_output = Command::new("ip")
-                .arg("r")
-                .stdout(Stdio::piped())
-                .spawn()?;
-
-            let grep_default_result = Command::new("grep")
-                .arg("default")
-                .stdin(Stdio::from(ip_r_output.stdout.unwrap()))
-                .stdout(Stdio::piped())
-                .spawn()
-                .unwrap();
-
-            let grep_vlink_result = Command::new("grep")
-                .args(["-v", "link"])
-                .stdin(Stdio::from(grep_default_result.stdout.unwrap()))
-                .stdout(Stdio::piped())
-                .spawn()
-                .unwrap();
-
-            let default_gateway_result = Command::new("awk")
-                .arg("{print $3}")
-                .stdin(Stdio::from(grep_vlink_result.stdout.unwrap()))
-                .stdout(Stdio::inherit())
-                .spawn()
-                .unwrap();
-
-            let default_gateway = default_gateway_result.wait_with_output()?;
-            println!("PENIS {}", String::from_utf8(default_gateway.stdout.clone())?);
-            println!("STATUS SUCCESS? {}", default_gateway.status.success());
-
-            if !default_gateway.status.success() {
-                return Ok(String::from_utf8(default_gateway.stdout)?.trim().to_string());
-            }
-            let std_err = String::from_utf8(default_gateway.stderr)?;
-            return Err(format!("Failed to get default gateway: {}", std_err).into());
+        //#[cfg(target_os = "macos")]
+        let output = Command::new("ip")
+            .arg("r | grep default | grep -v link |awk {print $3}")
+            .output()?;
+        if !output.status.success() {
+            return Ok(String::from_utf8(output.stdout)?.trim().to_string());
         }
+        let std_err = String::from_utf8(output.stderr)?;
+        return Err(format!("Failed to get default gateway: {}", std_err).into());
     }
 }
 
