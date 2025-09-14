@@ -50,10 +50,7 @@ pub trait RouteManager {
                 .spawn()?;
 
             let output = awk.wait_with_output()?;
-            println!("VAGINA {}", String::from_utf8(output.stdout.clone())?);
-            println!("SUCCESS?? {}", output.status.success());
-            if !output.status.success() {
-                println!("HUI {}", String::from_utf8(output.stdout.clone())?);
+            if output.status.success() {
                 return Ok(String::from_utf8(output.stdout)?.trim().to_string());
             }
             let std_err = String::from_utf8(output.stderr)?;
