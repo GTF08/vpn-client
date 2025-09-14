@@ -14,21 +14,49 @@ pub trait RouteManager {
     fn add_route(&self, destination: &str, gateway: &str) -> Result<(), Box<dyn std::error::Error>>;
     fn add_default_route(&self) -> Result<(), Box<dyn std::error::Error>>;
     fn cleanup(&self) -> Result<(), Box<dyn std::error::Error>>;
-    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    //#[cfg(any(target_os = "linux", target_os = "macos"))]
     fn get_default_gateway() -> Result<String, Box<dyn std::error::Error>> {
         #[cfg(target_os = "linux")]
         let output = Command::new("ip")
             .arg("route show default | awk '{print $3}'")
             .output()?;
-        #[cfg(target_os = "macos")]
-        let output = Command::new("ip")
-            .arg("r | grep default | grep -v link |awk {print $3}")
-            .output()?;
-        if !output.status.success() {
-            return Ok(String::from_utf8(output.stdout)?.trim().to_string());
+        
+        //#[cfg(target_os = "macos")]
+        {
+            use std::process::Stdio;
+
+             let ip_r = Command::new("ip")
+                .arg("r")
+                .stdout(Stdio::piped())
+                .spawn()?;
+
+            let grep1 = Command::new("grep")
+                .arg("default")
+                .stdin(ip_r.stdout.unwrap())
+                .stdout(Stdio::piped())
+                .spawn()?;
+
+            let grep2 = Command::new("grep")
+                .arg("-v")
+                .arg("link")
+                .stdin(grep1.stdout.unwrap())
+                .stdout(Stdio::piped())
+                .spawn()?;
+
+            let awk = Command::new("awk")
+                .arg("{print $3}")
+                .stdin(grep2.stdout.unwrap())
+                .stdout(Stdio::piped())
+                .spawn()?;
+
+            let output = awk.wait_with_output()?;
+
+            if !output.status.success() {
+                return Ok(String::from_utf8(output.stdout)?.trim().to_string());
+            }
+            let std_err = String::from_utf8(output.stderr)?;
+            return Err(format!("Failed to get default gateway: {}", std_err).into());
         }
-        let std_err = String::from_utf8(output.stderr)?;
-        return Err(format!("Failed to get default gateway: {}", std_err).into());
     }
 }
 
