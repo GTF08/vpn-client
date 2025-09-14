@@ -95,8 +95,10 @@ impl RouteManager for DesktopRouteManager {
         #[cfg(any(target_os = "linux", target_os = "macos"))]
         {
             let old_gateway = DesktopRouteManager::get_default_gateway()?;
+            println!("{}", old_gateway);
             // Linux/macOS route command
             //Add route to server
+            println!("EXEC route add {} {}", &self.server_pub_ip, &old_gateway);
             Command::new("route")
                 .args(&["add", &self.server_pub_ip, &old_gateway ])
                 .status()?;
@@ -105,6 +107,7 @@ impl RouteManager for DesktopRouteManager {
             writeln!(file, "route delete {} {}", &self.server_pub_ip, &old_gateway);
 
             //Delete default route
+            println!("EXEC route delete default");
             Command::new("route")
                 .args(&["delete", "default"])
                 .status()?;
@@ -112,6 +115,7 @@ impl RouteManager for DesktopRouteManager {
             writeln!(file, "route add default {}", &old_gateway);
 
             //Add default route via tun
+            println!("EXEC route add default {}", &self.server_gateway);
             let output = Command::new("route")
                 .args(&["add", "default", &self.server_gateway ])
                 .status()?;
