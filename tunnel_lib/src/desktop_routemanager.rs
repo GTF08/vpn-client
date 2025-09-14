@@ -52,6 +52,7 @@ pub trait RouteManager {
             let output = awk.wait_with_output()?;
             println!("{}", String::from_utf8(output.stdout.clone())?);
             if !output.status.success() {
+                println!("{}", String::from_utf8(output.stdout.clone())?);
                 return Ok(String::from_utf8(output.stdout)?.trim().to_string());
             }
             let std_err = String::from_utf8(output.stderr)?;
