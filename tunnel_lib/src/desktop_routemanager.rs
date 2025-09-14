@@ -14,7 +14,7 @@ pub trait RouteManager {
     fn add_route(&self, destination: &str, gateway: &str) -> Result<(), Box<dyn std::error::Error>>;
     fn add_default_route(&self) -> Result<(), Box<dyn std::error::Error>>;
     fn cleanup(&self) -> Result<(), Box<dyn std::error::Error>>;
-    //#[cfg(any(target_os = "linux", target_os = "macos"))]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
     fn get_default_gateway() -> Result<String, Box<dyn std::error::Error>> {
         use std::process::Stdio;
 
@@ -22,12 +22,12 @@ pub trait RouteManager {
         let output = Command::new("ip")
             .arg("route show default | awk '{print $3}'")
             .output()?;
-        //#[cfg(target_os = "macos")]
+        #[cfg(target_os = "macos")]
         let ip_r_output = Command::new("ip")
             .arg("r")
             .stdout(Stdio::piped())
             .spawn()?;
-        
+
         let grep_default_result = Command::new("grep")
             .arg("default")
             .stdin(Stdio::from(ip_r_output.stdout.unwrap()))
