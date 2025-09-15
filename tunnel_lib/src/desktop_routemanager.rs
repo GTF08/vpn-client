@@ -25,31 +25,34 @@ pub trait RouteManager {
         {
             use std::process::Stdio;
 
-             let ip_r = Command::new("ip")
-                .arg("r")
+             let netstat = Command::new("netstat")
+                .arg("-rn")
+                .arg("-f")
+                .arg("inet")
                 .stdout(Stdio::piped())
                 .spawn()?;
 
-            let grep1 = Command::new("grep")
-                .arg("default")
-                .stdin(ip_r.stdout.unwrap())
-                .stdout(Stdio::piped())
-                .spawn()?;
-
-            let grep2 = Command::new("grep")
-                .arg("-v")
-                .arg("link")
-                .stdin(grep1.stdout.unwrap())
+            let grep_default = Command::new("grep")
+                .arg("^default")
+                .stdin(netstat.stdout.unwrap())
                 .stdout(Stdio::piped())
                 .spawn()?;
 
             let awk = Command::new("awk")
-                .arg("{print $3}")
-                .stdin(grep2.stdout.unwrap())
+                .arg("{print $2}")
+                .stdin(grep_default.stdout.unwrap())
                 .stdout(Stdio::piped())
                 .spawn()?;
 
-            let output = awk.wait_with_output()?;
+            let grep_link = Command::new("grep")
+                .arg("-v")
+                .arg("^link#")
+                .stdin(awk.stdout.unwrap())
+                .stdout(Stdio::piped())
+                .spawn()?;
+
+
+            let output = grep_link.wait_with_output()?;
             if output.status.success() {
                 return Ok(String::from_utf8(output.stdout)?.trim().to_string());
             }
