@@ -206,8 +206,15 @@ impl RouteManager for DesktopRouteManager {
                     .arg(line)
                     .output()?;
 
-                #[cfg(any(target_os = "linux", target_os = "macos"))]
-                let output = Command::new(line)
+                //#[cfg(any(target_os = "linux", target_os = "macos"))]
+                let command_line: Vec<&str> = line.split(" ").collect();
+                println!("{}", command_line[0]);
+                println!("ARGS");
+                for arg in &command_line[1..] {
+                    println!("ARG {arg}");
+                }
+                let output = Command::new(command_line[0])
+                    .args(&command_line[1..])
                     .output()?;
                 if !output.status.success() {
                     eprintln!("Failed to cleanup routes with command: {line}")
