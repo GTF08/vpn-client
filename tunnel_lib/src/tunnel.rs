@@ -8,7 +8,7 @@
 // use tokio::io::{AsyncRead, AsyncWrite};
 //#[cfg(any(target_os = "linux", target_os = "android", target_os = "macos"))]
 
-use tun::AsyncDevice;
+use tun_rs::{DeviceBuilder, AsyncDevice};
 
 #[cfg(target_os = "android")]
 use std::os::raw::{c_int};
@@ -33,22 +33,21 @@ use std::os::raw::{c_int};
 pub async fn create_tunnel(tun_ip: &str, tun_netmask: &str, tun_gateway: &str) 
 -> Result<AsyncDevice, Box<dyn std::error::Error + Send + Sync>> 
 {
-    let mut config = tun::Configuration::default();
-    config
-        .address(tun_ip)
-        .netmask(tun_netmask)
-        .destination(tun_gateway)
+    let dev = DeviceBuilder::new()
+        .name("sucktun0")
+        .ipv4(tun_ip, tun_netmask, Some(tun_gateway))
         .mtu(1400u16)
-        .up();
+        .build_async()
+        .unwrap();
+    // let mut config = tun::Configuration::default();
+    // config
+    //     .address(tun_ip)
+    //     .netmask(tun_netmask)
+    //     .destination(tun_gateway)
+    //     .mtu(1400u16)
+    //     .up();
 
-    #[cfg(target_os = "linux")]
-    config.platform_config(|config| {
-        // requiring root privilege to acquire complete functions
-        config.ensure_root_privileges(true);
-    });
-    
-
-    let dev = tun::create_as_async(&config)?;
+    //let dev = tun::create_as_async(&config)?;
 
     Ok(dev)
 }
@@ -68,22 +67,12 @@ pub async fn create_tunnel(tun_fd: c_int)
 pub async fn create_tunnel(tun_ip: &str, tun_netmask: &str, tun_gateway: &str) 
 -> Result<AsyncDevice, Box<dyn std::error::Error + Send + Sync>> 
 {
-    use tun::{AbstractDevice, Configuration};
-
-    let mut config = Configuration::default();
-
-    config
-        .address(tun_ip)
-        .netmask(tun_netmask)
-        .destination(tun_gateway)
+    let dev = DeviceBuilder::new()
+        .name("sucktun0")
+        .ipv4(tun_ip, tun_netmask, Some(tun_gateway))
         .mtu(1400u16)
-        .up();
-
-    config.platform_config(|config| {
-            config.packet_information(true);
-    });
-
-    let dev = tun::create_as_async(&config)?;
+        .build_async()
+        .unwrap();
 
     Ok(dev)
 }

@@ -61,7 +61,7 @@ pub trait RouteManager {
 
 #[cfg(not(target_os = "android"))]
 pub struct DesktopRouteManager {
-    tun_index: i32,
+    tun_index: u32,
     server_pub_ip: String,
     server_gateway: String,
 }
@@ -69,7 +69,7 @@ pub struct DesktopRouteManager {
 #[cfg(not(target_os = "android"))]
 impl DesktopRouteManager {
     pub fn new(
-        tun_index: i32, 
+        tun_index: u32, 
         server_pub_ip: String,
         server_gateway: String
     ) -> Self {
