@@ -68,7 +68,7 @@ pub async fn create_tunnel(tun_ip: &str, tun_netmask: &str, tun_gateway: &str)
 -> Result<AsyncDevice, Box<dyn std::error::Error + Send + Sync>> 
 {
     let dev = DeviceBuilder::new()
-        .name("sucktun0")
+        .name("utunsuck0")
         .ipv4(tun_ip, tun_netmask, Some(tun_gateway))
         .mtu(1400u16)
         .build_async()

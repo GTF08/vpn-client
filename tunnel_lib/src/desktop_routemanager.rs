@@ -25,7 +25,7 @@ pub trait RouteManager {
         {
             use std::process::Stdio;
 
-             let netstat = Command::new("netstat")
+            let netstat = Command::new("netstat")
                 .arg("-rn")
                 .arg("-f")
                 .arg("inet")
