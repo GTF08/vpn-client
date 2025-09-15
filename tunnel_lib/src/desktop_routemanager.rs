@@ -87,7 +87,9 @@ impl DesktopRouteManager {
 #[cfg(not(target_os = "android"))]
 impl Drop for DesktopRouteManager {
     fn drop(&mut self) {
-        let _ = self.cleanup();
+        if let Err(e) = self.cleanup() {
+            eprintln!("Failed to cleanup: {e}");
+        }
     }
 }
 
@@ -142,6 +144,7 @@ impl RouteManager for DesktopRouteManager {
                 .args(&["delete", "default"])
                 .status()?;
             //Command to recover default route
+            writeln!(file, "route delete default {}", &self.server_gateway);
             writeln!(file, "route add default {}", &old_gateway);
 
             //Add default route via tun
@@ -151,8 +154,6 @@ impl RouteManager for DesktopRouteManager {
                 .status()?;
 
             //delete default route via tun
-            writeln!(file, "route delete default {}", &self.server_gateway);
-            
         }
         println!("ADDED DEFAULT ROUTE VIA {}", self.server_gateway);
         Ok(())
@@ -206,18 +207,20 @@ impl RouteManager for DesktopRouteManager {
                     .arg(line)
                     .output()?;
 
-                //#[cfg(any(target_os = "linux", target_os = "macos"))]
-                let command_line: Vec<&str> = line.split(" ").collect();
-                println!("{}", command_line[0]);
-                println!("ARGS");
-                for arg in &command_line[1..] {
-                    println!("ARG {arg}");
-                }
-                let output = Command::new(command_line[0])
-                    .args(&command_line[1..])
-                    .output()?;
-                if !output.status.success() {
-                    eprintln!("Failed to cleanup routes with command: {line}")
+                #[cfg(any(target_os = "linux", target_os = "macos"))]
+                {
+                    let command_line: Vec<&str> = line.split(" ").collect();
+                    println!("{}", command_line[0]);
+                    println!("ARGS");
+                    for arg in &command_line[1..] {
+                        println!("ARG {arg}");
+                    }
+                    let output = Command::new(command_line[0])
+                        .args(&command_line[1..])
+                        .output()?;
+                    if !output.status.success() {
+                        eprintln!("Failed to cleanup routes with command: {line}")
+                    }
                 }
             }
         }
