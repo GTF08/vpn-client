@@ -8,10 +8,11 @@
 // use tokio::io::{AsyncRead, AsyncWrite};
 //#[cfg(any(target_os = "linux", target_os = "android", target_os = "macos"))]
 
-use tun_rs::{DeviceBuilder, AsyncDevice};
+pub const MTU: u16 = 1400u16;
 
-#[cfg(target_os = "android")]
-use std::os::raw::{c_int};
+#[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
+use tun_rs::{DeviceBuilder};
+use tun_rs::{AsyncDevice};
 
 // pub async fn create_tunnel(
 //     tun_ip: &str,
@@ -36,7 +37,7 @@ pub async fn create_tunnel(tun_ip: &str, tun_netmask: &str, tun_gateway: &str)
     let dev = DeviceBuilder::new()
         .name("sucktun0")
         .ipv4(tun_ip, tun_netmask, Some(tun_gateway))
-        .mtu(1400u16)
+        .mtu(MTU)
         .build_async()
         .unwrap();
     // let mut config = tun::Configuration::default();
@@ -44,7 +45,7 @@ pub async fn create_tunnel(tun_ip: &str, tun_netmask: &str, tun_gateway: &str)
     //     .address(tun_ip)
     //     .netmask(tun_netmask)
     //     .destination(tun_gateway)
-    //     .mtu(1400u16)
+    //     .mtu(MTU)
     //     .up();
 
     //let dev = tun::create_as_async(&config)?;
@@ -53,13 +54,10 @@ pub async fn create_tunnel(tun_ip: &str, tun_netmask: &str, tun_gateway: &str)
 }
 
 #[cfg(target_os = "android")]
-pub async fn create_tunnel(tun_fd: c_int) 
+pub async fn create_tunnel(tun_fd: i32) 
 -> Result<AsyncDevice, Box<dyn std::error::Error + Send + Sync>> 
 {
-    let mut config = tun::Configuration::default();
-    config.mtu(1400u16);
-    config.raw_fd(tun_fd);
-    let mut dev = tun::create_as_async(&config).unwrap();
+    let mut dev = unsafe { tun_rs::AsyncDevice::from_fd(tun_fd)? };
     Ok(dev)
 }
 
@@ -70,7 +68,7 @@ pub async fn create_tunnel(tun_ip: &str, tun_netmask: &str, tun_gateway: &str)
     let dev = DeviceBuilder::new()
         // Do not pin a specific utun index; let macOS assign a free one.
         .ipv4(tun_ip, tun_netmask, Some(tun_gateway))
-        .mtu(1400u16)
+        .mtu(MTU)
         .build_async()?;
 
     Ok(dev)
@@ -90,7 +88,7 @@ pub async fn create_tunnel(tun_ip: &str, tun_netmask: &str, tun_gateway: &str)
         .address(tun_ip)
         .netmask(tun_netmask)
         .destination(tun_gateway)
-        .mtu(1400u16)
+        .mtu(MTU)
         .up();
 
     #[cfg(target_os = "linux")]

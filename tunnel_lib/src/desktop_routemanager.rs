@@ -7,6 +7,8 @@ use std::fs::File;
 #[cfg(not(target_os = "android"))]
 use std::fs::read_to_string;
 
+use log::{debug, error};
+
 const ROUTE_REVERT_FILE: &str = "route_revert.cfg";
 
 #[cfg(not(target_os = "android"))]
@@ -88,7 +90,7 @@ impl DesktopRouteManager {
 impl Drop for DesktopRouteManager {
     fn drop(&mut self) {
         if let Err(e) = self.cleanup() {
-            eprintln!("Failed to cleanup: {e}");
+            error!("Failed to cleanup: {}", e);
         }
     }
 }
@@ -127,35 +129,40 @@ impl RouteManager for DesktopRouteManager {
         #[cfg(any(target_os = "linux", target_os = "macos"))]
         {
             let old_gateway = DesktopRouteManager::get_default_gateway()?;
-            println!("{}", old_gateway);
+            debug!("Old gateway: {}", old_gateway);
             // Linux/macOS route command
             //Add route to server
-            println!("EXEC route add {} {}", &self.server_pub_ip, &old_gateway);
+            debug!("Running command: route add {} {}", &self.server_pub_ip, &old_gateway);
+
             Command::new("route")
                 .args(&["add", &self.server_pub_ip, &old_gateway ])
                 .status()?;
             
             //Command to delete server route
+            debug!("Adding cleanup commane: route delete {} {}", &self.server_pub_ip, &old_gateway);
             writeln!(file, "route delete {} {}", &self.server_pub_ip, &old_gateway);
 
             //Delete default route
-            println!("EXEC route delete default");
+            debug!("Running command: route delete default");
             Command::new("route")
                 .args(&["delete", "default"])
                 .status()?;
             //Command to recover default route
+            debug!("Adding cleanup commane: route delete default {}", &self.server_gateway);
+            debug!("Adding cleanup commane: route add default {}", &old_gateway);
             writeln!(file, "route delete default {}", &self.server_gateway);
             writeln!(file, "route add default {}", &old_gateway);
 
             //Add default route via tun
-            println!("EXEC route add default {}", &self.server_gateway);
+            debug!("Running command: route add default {}", &self.server_gateway);
             let output = Command::new("route")
                 .args(&["add", "default", &self.server_gateway ])
                 .status()?;
 
             //delete default route via tun
         }
-        println!("ADDED DEFAULT ROUTE VIA {}", self.server_gateway);
+        debug!("Added default route via {}", &self.server_gateway);
+
         Ok(())
     }
     
@@ -201,6 +208,7 @@ impl RouteManager for DesktopRouteManager {
     fn cleanup(&self) -> Result<(), Box<dyn std::error::Error>> {
         if std::path::Path::new(ROUTE_REVERT_FILE).exists() {
             for line in read_to_string(ROUTE_REVERT_FILE).unwrap().lines() {
+                debug!("Running cleanup commands: {}", line);
                 #[cfg(target_os = "windows")]
                 let output = Command::new("cmd")
                     .arg("/C")
@@ -210,16 +218,11 @@ impl RouteManager for DesktopRouteManager {
                 #[cfg(any(target_os = "linux", target_os = "macos"))]
                 {
                     let command_line: Vec<&str> = line.split(" ").collect();
-                    println!("{}", command_line[0]);
-                    println!("ARGS");
-                    for arg in &command_line[1..] {
-                        println!("ARG {arg}");
-                    }
                     let output = Command::new(command_line[0])
                         .args(&command_line[1..])
                         .output()?;
                     if !output.status.success() {
-                        eprintln!("Failed to cleanup routes with command: {line}")
+                        error!("Failed to cleanup routes with command: {}", line);
                     }
                 }
             }

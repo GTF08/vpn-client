@@ -2,7 +2,7 @@
 
 use iced::Size;
 
-use crate::gui::app::App;
+use crate::{gui::app::App, vpn_externs::init_rust_logger};
 use log::{error, info};
 
 mod gui;
@@ -11,9 +11,12 @@ mod logger;
 
 fn main() -> Result<(), String> {
 
-     if let Err(e) = logger::setup_logger() {
-        eprintln!("Failed to initialize logger: {}", e);
+    if let Err(e) = logger::setup_logger() {
         return Err(e.to_string());
+    }
+    if let -1 = unsafe { init_rust_logger() } {
+        error!("Failed to initialize logger");
+        return Err("Failed to initialize logger".into())
     }
 
     info!("Starting application");

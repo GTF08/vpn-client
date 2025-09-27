@@ -26,7 +26,6 @@ pub fn setup_logger() -> Result<(), fern::InitError> {
         .level_for("naga", log::LevelFilter::Error)
         .level_for("cosmic_text", log::LevelFilter::Error)
         .level_for("fontdb", log::LevelFilter::Error)
-        .level_for("client-gui", log::LevelFilter::Debug)
         .level(LevelFilter::Debug) // Уровень логирования по умолчанию
         .chain(fern::log_file("logs/app.log")?) // Логи в файл
         .chain(std::io::stdout()) // Логи в консоль

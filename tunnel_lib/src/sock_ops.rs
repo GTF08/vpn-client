@@ -32,8 +32,8 @@ pub async fn sock_write(
     //     write.send_to(&bytes, addr).await?;
     // }
     // Ok(())
-    let bytes = bincode::encode_to_vec(data, bincode::config::standard())
-        .map_err(|e| {println!("{e}"); format!("{e}")})?;
+    let bytes = bincode::encode_to_vec(data, bincode::config::standard())?;
+        //.map_err(|e| {println!("{e}"); format!("{e}")})?;
 
     udp_socket.send(&bytes).await?;
     Ok(())

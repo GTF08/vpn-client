@@ -4,6 +4,7 @@ use std::ffi::{c_char, c_int, c_void};
 
 #[link(name = "tunnel_lib", kind = "dylib")]
 unsafe extern "C" {
+    pub fn init_rust_logger() -> c_int;
     pub fn vpn_init(
         server_pubkey_path: *const c_char,
         server_addr: *const c_char,

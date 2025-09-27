@@ -1,4 +1,4 @@
-use aes_gcm_siv::{aead::Aead, AeadCore, Aes256GcmSiv};
+use chacha20poly1305::{aead::Aead, AeadCore, ChaCha20Poly1305};
 use bincode::{Decode, Encode};
 use rand::rngs::OsRng;
 
@@ -51,17 +51,17 @@ pub struct EncryptedMessage {
 
 pub trait CryptoSupported
 where Self: Sized + Encode + Decode<()> {
-    fn encrypt(self, cipher: &Aes256GcmSiv) -> Result<EncryptedMessage, String> {
+    fn encrypt(self, cipher: &ChaCha20Poly1305) -> Result<EncryptedMessage, String> {
         let bytes = 
             bincode::encode_to_vec(self, bincode::config::standard())
             .map_err(|e| format!("{e}"))?;
-        let nonce = Aes256GcmSiv::generate_nonce(OsRng);
+        let nonce = ChaCha20Poly1305::generate_nonce(OsRng);
         let ciphertext = cipher.encrypt(&nonce, bytes.as_slice())
             .map_err(|e| format!("{e}"))?;
         Ok(EncryptedMessage { ciphertext: ciphertext, nonce: nonce.to_vec() })
     }
 
-    fn decrypt(encrypted: &EncryptedMessage, cipher: &Aes256GcmSiv) -> Result<Self, String> {
+    fn decrypt(encrypted: &EncryptedMessage, cipher: &ChaCha20Poly1305) -> Result<Self, String> {
         let nonce = encrypted.nonce.as_slice().into();
         let bytes = cipher.decrypt(nonce, encrypted.ciphertext.as_slice())
             .map_err(|e| format!("{e}"))?;
