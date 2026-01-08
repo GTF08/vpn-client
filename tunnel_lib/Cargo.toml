@@ -8,6 +8,7 @@ name = "tunnel_lib"
 crate-type = ["cdylib"]
 
 [dependencies]
+aead = { version = "0.5.2", features = ["bytes"] }
 jni = "0.21.1"
 tun-rs = {version = "2.7.2", features = ["async"]}
 chacha20poly1305 = "0.10.1"
@@ -15,11 +16,10 @@ sha2 = "0.10"
 x25519-dalek = "2.0.1"
 ed25519-dalek = "2.2.0"
 tokio = { version = "1.47.1", features = ["full"] }
-packet = "0.1.4"
-hex = "0.4"
-bincode = { version = "2.0.1", features = ["serde"] }
 rand = "0.8"
 log = "0.4"
+bytes = "1.11.0"
+tokio-util = "0.7.18"
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.15"

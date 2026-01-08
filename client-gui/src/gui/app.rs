@@ -80,9 +80,14 @@ impl App {
                 self.vpn_init()
             },
             Message::VPNInitFinished(client_ptr) => {
-                self.state.connection.client_ptr = client_ptr;
-                self.state.connection.connection_step = super::state::ConnectionStep::Negotiating;
-                self.vpn_negotiate(client_ptr)
+                if client_ptr == 0 {
+                    error!("Failed to initialize VPN!");
+                    Task::none()
+                } else {
+                    self.state.connection.client_ptr = client_ptr;
+                    self.state.connection.connection_step = super::state::ConnectionStep::Negotiating;
+                    self.vpn_negotiate(client_ptr)
+                }
             },
             Message::VPNNegotiationFinished(result) => {
                 if result == 1 {

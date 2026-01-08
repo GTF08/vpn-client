@@ -28,7 +28,7 @@ pub fn setup_logger() -> Result<(), fern::InitError> {
         .level_for("fontdb", log::LevelFilter::Error)
         .level(LevelFilter::Debug) // Уровень логирования по умолчанию
         .chain(fern::log_file("logs/app.log")?) // Логи в файл
-        .chain(std::io::stdout()) // Логи в консоль
+        //.chain(std::io::stdout()) // Логи в консоль
         .apply()?;
     
     Ok(())

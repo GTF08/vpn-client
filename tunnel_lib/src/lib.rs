@@ -21,6 +21,8 @@ mod desktop_routemanager;
 mod sock_ops;
 mod key_management;
 mod vpnclient;
+mod bufferpool;
+mod tasks;
 
 const LOG_FILE: &'static str = "vpn.log";
 
@@ -53,7 +55,7 @@ const LOG_FILE: &'static str = "vpn.log";
         })
         .level(LevelFilter::Debug) // Уровень логирования по умолчанию
         .chain(logfile) // Логи в файл
-        .chain(std::io::stdout()) // Логи в консоль
+        //.chain(std::io::stdout()) // Логи в консоль
         .apply();
     if let Err(_e) = init_result {
         return -1;
@@ -71,6 +73,8 @@ pub extern "C" fn vpn_init(
     username: *const c_char,
     password: *const c_char,
 ) -> *mut c_void {
+    use std::net::Ipv4Addr;
+
     
     let server_pubkey_path = unsafe { CStr::from_ptr(server_pubkey_path).to_string_lossy().into_owned() };
     let server_addr = unsafe { CStr::from_ptr(server_addr).to_string_lossy().into_owned() };
@@ -87,7 +91,23 @@ pub extern "C" fn vpn_init(
         .enable_all()
         .build()
         .unwrap();
-
+   let server_addr: Ipv4Addr = match server_addr.parse::<std::net::Ipv4Addr>() {
+        Ok(ipv4) => {
+            info!("Parsed IP {} as {}", server_addr, ipv4.to_bits());
+            ipv4
+        },
+        Err(e) => {
+            error!("Failed to parse server address '{}': {}", server_addr, e);
+            return std::ptr::null_mut();
+        },
+    };
+    let server_port : u16 = match server_port.parse() {
+        Ok(v) => v,
+        Err(e) => {
+            error!("Failed to parse server port as u16. Error: {e}");
+            return std::ptr::null_mut();
+        },
+    };
     let vpn_client_box = Box::new(
         VPNClient::new(server_pubkey_path, server_addr, server_port, username, password, runtime)
     );

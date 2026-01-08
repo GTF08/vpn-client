@@ -1,3 +1,5 @@
+#[cfg(not(target_os = "android"))]
+use std::net::Ipv4Addr;
 use std::process::Command;
 
 #[cfg(not(target_os = "android"))]
@@ -10,6 +12,9 @@ use std::fs::read_to_string;
 use log::{debug, error};
 
 const ROUTE_REVERT_FILE: &str = "route_revert.cfg";
+
+#[cfg(target_os = "windows")]
+const FLAG_CREATE_NO_WINDOW: u32 = 0x08000000;
 
 #[cfg(not(target_os = "android"))]
 pub trait RouteManager {
@@ -67,16 +72,16 @@ pub trait RouteManager {
 #[cfg(not(target_os = "android"))]
 pub struct DesktopRouteManager {
     tun_index: u32,
-    server_pub_ip: String,
-    server_gateway: String,
+    server_pub_ip: Ipv4Addr,
+    server_gateway: Ipv4Addr,
 }
 
 #[cfg(not(target_os = "android"))]
 impl DesktopRouteManager {
     pub fn new(
         tun_index: u32, 
-        server_pub_ip: String,
-        server_gateway: String
+        server_pub_ip: Ipv4Addr,
+        server_gateway: Ipv4Addr
     ) -> Self {
         Self { 
             tun_index, 
@@ -99,8 +104,12 @@ impl Drop for DesktopRouteManager {
 impl RouteManager for DesktopRouteManager {
     fn add_route(&self, destination: &str, gateway: &str) -> Result<(), Box<dyn std::error::Error>> {
         #[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+        #[cfg(target_os = "windows")]
         Command::new("cmd")
             .args(&["/C", &format!("route add {} mask 255.255.255.255 {}", destination, gateway)])
+            .creation_flags(FLAG_CREATE_NO_WINDOW)
             .status()?;
         #[cfg(target_os = "linux")] 
         Command::new("sh")
@@ -120,8 +129,12 @@ impl RouteManager for DesktopRouteManager {
         #[cfg(target_os = "windows")]
         {
             // Windows route command
+
+            use std::os::windows::process::CommandExt;
+
             Command::new("route")
-                .args(&["add", "0.0.0.0", "mask", "0.0.0.0", &self.server_gateway, "if", &self.tun_index.to_string(), "metric", "1"])
+                .args(&["add", "0.0.0.0", "mask", "0.0.0.0", &self.server_gateway.to_string(), "if", &self.tun_index.to_string(), "metric", "1"])
+                .creation_flags(FLAG_CREATE_NO_WINDOW)
                 .status()?;
             writeln!(file, "route delete 0.0.0.0 mask 0.0.0.0 {} if {}", &self.server_gateway, &self.tun_index.to_string())?;
         }
@@ -208,12 +221,16 @@ impl RouteManager for DesktopRouteManager {
     fn cleanup(&self) -> Result<(), Box<dyn std::error::Error>> {
         if std::path::Path::new(ROUTE_REVERT_FILE).exists() {
             for line in read_to_string(ROUTE_REVERT_FILE).unwrap().lines() {
+                #[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
                 debug!("Running cleanup commands: {}", line);
                 #[cfg(target_os = "windows")]
                 let output = Command::new("cmd")
+                    .creation_flags(FLAG_CREATE_NO_WINDOW)
                     .arg("/C")
                     .arg(line)
-                    .output()?;
+                    .status()?;
 
                 #[cfg(any(target_os = "linux", target_os = "macos"))]
                 {

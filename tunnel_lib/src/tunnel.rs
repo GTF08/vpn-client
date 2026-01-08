@@ -10,6 +10,9 @@
 
 pub const MTU: u16 = 1400u16;
 
+#[cfg(target_os = "windows")]
+use std::net::Ipv4Addr;
+
 #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
 use tun_rs::{DeviceBuilder};
 use tun_rs::{AsyncDevice};
@@ -31,12 +34,15 @@ use tun_rs::{AsyncDevice};
 // }
 
 #[cfg(target_os = "windows")]
-pub async fn create_tunnel(tun_ip: &str, tun_netmask: &str, tun_gateway: &str) 
+pub async fn create_tunnel(tun_ip: &Ipv4Addr, tun_netmask: &Ipv4Addr, tun_gateway: &Ipv4Addr) 
 -> Result<AsyncDevice, Box<dyn std::error::Error + Send + Sync>> 
 {
     let dev = DeviceBuilder::new()
         .name("sucktun0")
-        .ipv4(tun_ip, tun_netmask, Some(tun_gateway))
+        .ipv4(
+            *tun_ip, 
+            tun_netmask.to_bits().leading_ones() as u8, 
+            Some(*tun_gateway))
         .mtu(MTU)
         .build_async()
         .unwrap();
